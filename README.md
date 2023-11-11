@@ -78,7 +78,7 @@ The app uses PostCSS, not plain CSS, so do not create a Tailwind directives file
 
 ### Edit application styles
 
-Edit tile `./app.postcss` to add any of your own preferred application styles.
+Edit tile `./app.postcss` to add any of your own preferred application styles, such as for typical web page HTML tags.
 
 Example:
 
@@ -108,3 +108,21 @@ Example:
 Our file is here:
 
 * <src/app.postcss>
+
+
+## Generate slugs
+
+For some of our web applications, we parse a pre-existing directory of markdown content files, and we generate slugs.
+
+We create this script:
+
+* <bin/slugs>
+
+And we write whatever we want to generate slugs, such as:
+
+```sh
+top=$(git rev-parse --show-toplevel)
+dir="$top/topics"
+find "$dir" -name 'index.md' -type f -exec dirname {} \; | 
+cut -c $(( ${#dir} + 2 ))-
+```
