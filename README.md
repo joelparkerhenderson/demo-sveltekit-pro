@@ -56,3 +56,55 @@ You may wish to verify the new configuration files:
 ./tsconfig.json
 ./vite.config.ts
 ```
+
+
+## Configure Tailwind
+
+Setup installed Tailwind and its dependencies.
+
+Setup added the Tailwind directives to your CSS by using this PostCSS file:
+
+File `./app.postcss`:
+
+```postcss
+/* Write your global styles here, in PostCSS syntax */
+@tailwind base;
+@tailwind components;
+@tailwind utilities
+```
+
+The app uses PostCSS, not plain CSS, so do not create a Tailwind directives file such as `./src/app.css`.
+
+
+### Edit application styles
+
+Edit tile `./app.postcss` to add any of your own preferred application styles.
+
+Example:
+
+```postcss
+@layer base {
+    h1 {
+        @apply text-3xl;
+    }
+    p {
+        @apply my-4;
+    }
+    a {
+        @apply text-blue-600 underline;
+    }
+    ol {
+        @apply list-decimal;
+    }
+    ul {
+        @apply list-disc;
+    }
+    li {
+        @apply my-4;
+    }
+}
+```
+
+Our file is here:
+
+* <src/app.postcss>
