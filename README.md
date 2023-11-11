@@ -110,15 +110,43 @@ Our file is here:
 * <src/app.postcss>
 
 
-## Generate slugs
+## Create helper tools
 
-For some of our web applications, we parse a pre-existing directory of markdown content files, and we generate slugs.
+For some of our projects, we create helper tools, such as typical shell scripts.
 
-We create this script:
+Our naming convention is to put these tools here:
 
-* <bin/slugs>
+```sh
+mkdir bin
+```
 
-And we write whatever we want to generate slugs, such as:
+
+### clean
+
+For some of our projects, we create a helper tool that we name `clean`.
+
+The tool aims to reset the project to its original state. 
+
+For example, the tool deletes all normal routes, yet does not affect any special routes that start with a plus character.
+
+File <bin/clean>:
+
+```sh
+#!/bin/sh
+set -euf
+find src/routes -type f ! -name '+*' -exec rm {} \;
+```
+
+This tool enables us to quickly clean up routes.
+
+  
+### slugs
+
+For some of our projects, we create a helper tool that we name `slugs`.
+
+The tool searches a pre-existing directory that contains pre-existing subdirectories that contain markdown content files, each named `index.md`. The tool parses the directories into web-friendly slugs.
+
+File <bin/slugs>:
 
 ```sh
 top=$(git rev-parse --show-toplevel)
