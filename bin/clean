@@ -1,3 +1,0 @@
-#!/bin/sh
-set -euf
-find src/routes -type f ! -name '+*' -exec rm {} \;

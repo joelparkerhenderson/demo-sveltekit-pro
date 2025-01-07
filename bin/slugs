@@ -1,6 +1,0 @@
-#!/bin/sh
-set -euf
-top=$(git rev-parse --show-toplevel)
-dir="$top/topics"
-find "$dir" -name 'index.md' -type f -exec dirname {} \; | 
-cut -c $(( ${#dir} + 2 ))-
