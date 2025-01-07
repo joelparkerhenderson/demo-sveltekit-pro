@@ -657,6 +657,33 @@ export type Session = typeof session.$inferSelect;
 export type User = typeof user.$inferSelect;
 ```
 
+We prefer the id to be an integer primary key generated always as identity.
+
+Change each of the lines from this…
+
+```ts
+        id: text('id').primaryKey(),
+```
+
+…into this:
+
+```ts
+        id: integer('id').primaryKey().generatedAlwaysAsIdentity({ startWith: 1 }),
+```
+
+Change from this…
+
+```ts
+	userId: text('user_id')
+```
+
+…into this:
+
+```ts
+	userId: integer('user_id')
+```
+
+
 Generate the SQL needed to migrate the database:
 
 ```sh
@@ -677,13 +704,13 @@ The file [`drizzle/0000_pretty_rockslide.sql`](drizzle/0000_pretty_rockslide.sql
 
 ```sql
 CREATE TABLE IF NOT EXISTS "session" (
-        "id" text PRIMARY KEY NOT NULL,
-        "user_id" text NOT NULL,
+        "id" integer PRIMARY KEY NOT NULL,
+        "user_id" integer NOT NULL,
         "expires_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user" (
-        "id" text PRIMARY KEY NOT NULL,
+        "id" integer PRIMARY KEY NOT NULL,
         "age" integer,
         "username" text NOT NULL,
         "password_hash" text NOT NULL,
@@ -695,35 +722,27 @@ DO $$ BEGIN
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
-➜ cat drizzle/0000_pretty_rockslide.sql
-CREATE TABLE IF NOT EXISTS "session" (
-	"id" text PRIMARY KEY NOT NULL,
-	"user_id" text NOT NULL,
-	"expires_at" timestamp with time zone NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "user" (
-	"id" text PRIMARY KEY NOT NULL,
-	"age" integer,
-	"username" text NOT NULL,
-	"password_hash" text NOT NULL,
-	CONSTRAINT "user_username_unique" UNIQUE("username")
-);
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
 ```
 
-To run the migration:
+Change each of the lines from this…
+
+```sql
+        "id" integer PRIMARY KEY NOT NULL,
+```
+
+…into this:
+
+```sql
+        "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+```
+
+Run the migration:
 
 ```sh
 npx drizzle-kit migrate	
 ```
 
-Verfiy:
+Verify tables:
 
 ```sh
 psql -d "postgres://demo_sveltekit_pro_owner:secret@localhost:5432/demo_sveltekit_pro_development" \
@@ -736,6 +755,25 @@ psql -d "postgres://demo_sveltekit_pro_owner:secret@localhost:5432/demo_svelteki
  __drizzle_migrations
  user
  session
+```
+
+Verify tables and columns:
+
+```sh
+➜ psql -d "postgres://demo_sveltekit_pro_owner:secret@localhost:5432/demo_sveltekit_pro_development" 
+-c "SELECT table_name, column_name, data_type FROM information_schema.columns where table_schema = 'public' order by table_name;"
+```
+
+```txt
+ table_name |  column_name  |        data_type         
+------------+---------------+--------------------------
+ session    | id            | integer
+ session    | user_id       | integer
+ session    | expires_at    | timestamp with time zone
+ user       | id            | integer
+ user       | age           | integer
+ user       | username      | text
+ user       | password_hash | text
 ```
 
 
