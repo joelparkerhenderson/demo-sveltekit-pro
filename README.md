@@ -10,8 +10,8 @@ Demo of SvelteKit with our preferred professional options:
 * Playwright - Fast and reliable end-to-end testing for modern web apps
 * TailwindCSS - A utility-first CSS framework.
 * TailwindCSS Plugins: Typography, Forms, Container Queries
-* SvelteKit Adapter + Vercel - A small plugin that generates output for deployment
-* Drizzle + PostgreSQL + Docker - ORM to your database and get the benefits of type safety and intellisense.
+* SvelteKit Adapter + Node - A small plugin that generates output for deployment
+* Drizzle + PostgreSQL - ORM to your database and get the benefits of type safety and intellisense.
 * Lucia - An open source resource on implementing authentication with JavaScript
 * mdsvex - Markdown preprocessor for Svelte. Markdown in Svelte.
 * Paraglide JS + ar,cy,de,en,es,eu,fr,hi,ja,sv,ru,zh - internationalization (i18n) library
@@ -36,6 +36,13 @@ npx --version
 10.9.2
 ```
 
+Svelte command line interface:
+
+```sh
+npx sv --version
+0.6.10
+```
+
 Performant Node Package Manager:
 
 ```sh
@@ -43,12 +50,57 @@ pnpm --version
 8.10.5
 ```
 
-Svelte command line interface:
+PostgreSQL:
 
 ```sh
-npx sv --version
-0.6.10
+psql --version
+psql (PostgreSQL) 16.6
 ```
+
+Docker:
+
+```sh
+docker --version
+Docker version 27.4.0, build bde2b89
+```
+
+Docker compose:
+
+```sh
+docker-compose --version
+Docker Compose version 2.32.1
+```
+
+<details>
+<summary>Install on macOS via brew</summary>
+brew install mise
+brew install node
+brew install pnpm
+brew install postgresql
+brew install --cask docker
+brew install docker-compose docker-credential-helper
+
+Launch Docker. When Docker is launched in this manner, a Docker whale icon appears in the status menu. As soon as the whale icon appears, the symbolic links for docker, docker-compose, docker-credential-osxkeychain and docker-machine are created in /usr/local/bin.
+
+Docker Compose is a Docker plugin. For Docker to find the plugin, add "cliPluginsExtraDirs" to ~/.docker/config.json:
+  "cliPluginsExtraDirs": [
+      "/opt/homebrew/lib/docker/cli-plugins"
+  ]
+</details>
+
+<details>
+<summary>Install on macOS via brew and mise</summary>
+mise use node
+mise use pnpm
+mise use docker-compose
+brew install gcc readline zlib curl openssl@1.1 ossp-uuid icu4c pkg-config
+PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$(brew --prefix icu4c)/lib/pkgconfig" \
+LDFLAGS="-L$(brew --prefix)/lib" \
+CPPFLAGS="-I$(brew --prefix)/include" \
+mise use postgres@16 --verbose
+brew install docker-compose docker-credential-helper
+</details>
+
 
 ## Create a SvelteKit web application
 
@@ -71,53 +123,65 @@ The options mean:
 ```txt
 ┌  Welcome to the Svelte CLI! (v0.6.10)
 │
-◆  Project created
+◇  Project created
 │
 ◇  What would you like to add to your project? (use arrow keys / space bar)
-│  [x] prettier
-|  [x] eslint
-|  [x] vitest
-|  [x] playwright
-|  [x] tailwindcss
-|  [x] sveltekit-adapter
-|  [x] drizzle
-|  [x] lucia
-|  [x] mdsvex
-|  [x] paraglide
-|  [x] storybook
+│  ◼ prettier (formatter - https://prettier.io)
+│  ◼ eslint (linter - https://eslint.org)
+│  ◼ vitest (unit testing - https://vitest.dev)
+│  ◼ playwright (browser testing - https://playwright.dev)
+│  ◼ tailwindcss (css framework - https://tailwindcss.com)
+│  ◼ sveltekit-adapter (deployment - https://svelte.dev/docs/kit/adapters)
+│  ◼ drizzle (database orm - https://orm.drizzle.team)
+│  ◼ lucia (auth guide - https://lucia-auth.com)
+│  ◼ mdsvex (svelte + markdown - https://mdsvex.pngwn.io)
+│  ◼ paraglide (i18n - https://inlang.com)
+│  ◼ storybook (frontend workshop - https://storybook.js.org)
 │
 ◇  tailwindcss: Which plugins would you like to add?
-│  [x] typography
-|  [x] forms
-|  [x] container-queries
+│  ◼ typography (@tailwindcss/typography)
+|  ◼ forms (@tailwindcss/forms)
+|  ◼ container-queries (@tailwindcss/container-queries)
 │
 ◇  sveltekit-adapter: Which SvelteKit adapter would you like to use?
-│  vercel
+│  ● node (@sveltejs/adapter-node)
+│  ○ static (@sveltejs/adapter-static)
+│  ○ vercel (@sveltejs/adapter-vercel)
+│  ○ cloudflare-pages (@sveltejs/adapter-cloudflare)
+│  ○ cloudflare-workers (@sveltejs/adapter-cloudflare-workers)
+│  ○ netlify (@sveltejs/adapter-netlify)
 │
 ◇  drizzle: Which database would you like to use?
-│  PostgreSQL
+│  ● PostgreSQL
+│  ○ SQLite
 │
 ◇  drizzle: Which PostgreSQL client would you like to use?
-│  Postgres.JS
+│  ● Postgres.JS (recommended for most users)
+│  ○ Neon (popular hosted platform)
 │
 ◇  drizzle: Do you want to run the database locally with docker-compose?
-│  Yes
-│
+│  ○ Yes / ● No
+│  
 ◇  lucia: Do you want to include a demo? (includes a login/register page)
-│  Yes
+│  ● Yes / ○ No
 │
 ◇  paraglide: Which languages would you like to support? (e.g. en,de-ch)
 │  ar,cy,de,en,es,eu,fr,hi,ja,sv,ru,zh
 │
 ◇  paraglide: Do you want to include a demo?
-│  Yes
+│  ● Yes / ○ No
 │
 ◇  Which package manager do you want to install dependencies with?
-│  pnpm
+│  ○ None
+│  ○ npm
+│  ○ yarn
+│  ● pnpm
+│  ○ bun
+│  ○ deno
 │
-◆  Successfully setup add-ons
+◇  Successfully setup add-ons
 │
-◆  Successfully installed dependencies
+◇  Successfully installed dependencies
 │
 ◇  Successfully formatted modified files
 │
@@ -178,6 +242,7 @@ npm create @svelte-add/kit@latest my.example.com -- \
 --tailwindcss-typography
 ```
 
+
 ### Add git
 
 Run:
@@ -187,7 +252,52 @@ cd demo
 git init
 git add --all
 git commit -m "Run npx sv@latest create demo --template minimal --types ts"
+```
+
+
+### Database
+
+This demo uses the PostgreSQL database server that must already be running on your system.
+
+Create a new role and database:
+
+```sh
+psql -U postgres -c "CREATE ROLE demo_sveltekit_pro_owner WITH LOGIN ENCRYPTED PASSWORD 'secret';"
+psql -U postgres -c "CREATE DATABASE demo_sveltekit_pro_development with owner = demo_sveltekit_pro_owner;"
+```
+
+Setup created a file Edit file [`.env`](.env):
+
+```sh
+# Replace with your DB credentials!
+DATABASE_URL="postgres://user:password@host:port/db-name"
+```
+
+Change the line to:
+
+```sh
+DATABASE_URL="postgres://demo_sveltekit_pro_owner:secret@host:5432/demo_sveltekit_pro_development"
+```
+
+
+### Launch
+
+Run:
+
+```sh
 pnpm run dev -- --open
+```
+
+
+### Optional copy
+
+To copy old files from a previous demo project:
+
+```sh
+cp demo-old/.env demo/
+cp demo-old/src/lib/{Header,Footer}.svelte demo/src/lib/
+cp demo-old/src/app.css demo/src/
+cp demo-old/src/routes/+layout.svelte demo/src/routes/
 ```
 
 
@@ -220,7 +330,7 @@ pnpm i -D @sveltejs/adapter-static
 
 If the project is a static site on Vercel then use the default adapter.
 
-Edit file `./svelte.config.js`:
+Edit file `svelte.config.js`:
 
 ```js
 import adapter from '@sveltejs/adapter-static';
@@ -253,7 +363,7 @@ export const trailingSlash = 'always';
 ```
 
 
-## Configure Tailwind
+## Tailwind
 
 Setup installed Tailwind and its dependencies.
 
@@ -287,14 +397,14 @@ export default {
 
 You can write PostCSS syntax in the style lang="postcss" blocks in Svelte files.
 
-You can write PostCSS syntax in the file `./src/app.css`.
+You can write PostCSS syntax in the file `src/app.css`.
 
 This is your global stylesheet because it will be active on every page of your site.
 
 
 ### Edit application styles
 
-Edit tile `./app.css` to add any of your own preferred application styles, such as for typical web page HTML tags.
+Edit file [`app.css`](app.css) to add any of your own preferred application styles, such as for typical web page HTML tags.
 
 Example:
 
@@ -321,24 +431,17 @@ Example:
 }
 ```
 
-Our file is here:
-
-* <src/app.css>
-
 
 ### Layout
 
-Setup create a layout file that includes TypeScript, internationalization, Paraglide, and more.
+Setup create a layout file [`src/routes/+layout.svelte`](src/routes/+layout.svelte) that includes TypeScript, internationalization, Paraglide, and more.
 
-```sh
-cat ./src/routes/+layout.svelte
-```
 
 ```svelte
 <script lang="ts">
 	import { i18n } from '$lib/i18n';
 	import { ParaglideJS } from '@inlang/paraglide-sveltekit';
-	import '../app.css';
+	import '.app.css';
 	let { children } = $props();
 </script>
 
@@ -352,7 +455,7 @@ cat ./src/routes/+layout.svelte
 
 Create some Svelte components that are simple placeholders, such as for a header and footer. Create the components with some simple HTML tags and some simple Tailwind CSS classes.
 
-Create file `./src/lib/Header.svelte`:
+Create file [`src/lib/Header.svelte`](src/lib/Header.svelte):
 
 ```html
 <header class="mb-2 border-b-2 border-2">
@@ -364,7 +467,7 @@ Create file `./src/lib/Header.svelte`:
 
 Create a Svelte component that is a simple placeholder footer.
 
-Create file `./src/lib/Footer.svelte`:
+Create file [`src/lib/Footer.svelte`](src/lib/Footer.svelte):
 
 ```html
 <footer class="mt-2 border-t-2 border-2">
@@ -374,13 +477,13 @@ Create file `./src/lib/Footer.svelte`:
 </footer>
 ````
 
-Add these components to the layout.
+Add these components to the layout file [`src/routes/+layout.svelte`](src/routes/+layout.svelte):
 
 ```svelte
 <script lang="ts">
 	import { i18n } from '$lib/i18n';
 	import { ParaglideJS } from '@inlang/paraglide-sveltekit';
-	import '../app.css';
+	import '.app.css';
     import Header from "$lib/Header.svelte";
     import Footer from "$lib/Footer.svelte";
 	let { children } = $props();
@@ -394,6 +497,178 @@ Add these components to the layout.
 ```
 
 
+## Test
+
+Vitest provides unit testing.
+
+Playwright provides end-to-end testing. 
+
+
+### Vitest
+
+Vitest provides unit testing.
+
+Setup created a unit test file [`src/demo.spec.ts`](src/demo.spec.ts):
+
+```ts
+import { describe, it, expect } from 'vitest';
+
+describe('sum test', () => {
+	it('adds 1 + 2 to equal 3', () => {
+		expect(1 + 2).toBe(3);
+	});
+});
+```
+
+
+### Playwright
+
+Playwright provides end-to-end ("e2e") testing. 
+
+Before you run Playwright the first time, you need to install any browser updates.
+
+Run:
+
+```sh
+pnpm exec playwright install   
+```
+
+Setup created an e2e test file [`e2e/demo.test.ts`](e2e/demo.test.ts):
+
+```ts
+import { expect, test } from '@playwright/test';
+
+test('home page has expected h1', async ({ page }) => {
+	await page.goto('/');
+	await expect(page.locator('h1')).toBeVisible();
+});
+```
+
+
+### Test the application
+
+Run:
+
+```sh
+pnpm test
+```
+
+Output:
+
+```txt
+✓ src/demo.spec.ts (1)
+   ✓ sum test (1)
+     ✓ adds 1 + 2 to equal 3
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  20:20:42
+   Duration  304ms (transform 26ms, setup 0ms, collect 14ms, tests 1ms, environment 0ms, prepare 86ms)
+
+
+> demo@0.0.1 test:e2e
+> playwright test
+
+[WebServer] "serial" is imported from external module "drizzle-orm/pg-core" but never used in "src/lib/server/db/schema.ts".
+[WebServer] .svelte-kit/generated/client-optimized/app.js (29:28): "transport" is not exported by "src/hooks.ts", imported by ".svelte-kit/generated/client-optimized/app.js".
+
+Running 1 test using 1 worker
+
+  ✓  1 demo.test.ts:3:1 › home page has expected h1 (475ms)
+
+  1 passed (10.1s)
+```
+
+
+### Unit test a custom file
+
+Create a file [`src/lib/sum.js`](src/lib/sum.js):
+
+```js
+export function sum(a, b) {
+  return a + b
+}
+```
+
+Create a file [`src/lib/sum.test.js`](src/lib/sum.test.js):
+
+```js
+import { expect, test } from 'vitest'
+import { sum } from 'sum.js'
+
+test('adds 1 + 2 to equal 3', () => {
+  expect(sum(1, 2)).toBe(3)
+})
+```
+
+Run:
+
+```sh
+pnpm test
+```
+
+
+## Database
+
+Setup created s database schema file  [`src/lib/server/db/schema.ts`](src/lib/server/db/schema.ts):
+
+```txt
+import { pgTable, serial, text, integer, timestamp } from 'drizzle-orm/pg-core';
+
+export const user = pgTable('user', {
+        id: text('id').primaryKey(),
+        age: integer('age'),
+        username: text('username').notNull().unique(),
+        passwordHash: text('password_hash').notNull()
+});
+
+export const session = pgTable('session', {
+        id: text('id').primaryKey(),
+        userId: text('user_id')
+                .notNull()
+                .references(() => user.id),
+        expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull()
+});
+
+export type Session = typeof session.$inferSelect;
+
+export type User = typeof user.$inferSelect;
+```
+
+
+## Demo route
+
+Setup created a demo route for Lucia and Paraglide:
+
+* http://localhost:5173/demo
+
+
+## Lucia authentication
+
+Setup created a Lucia demo directory: [`src/routes/demo/lucia/`](src/routes/demo/lucia/)
+
+```txt
+demo/src/routes/demo/lucia/
+demo/src/routes/demo/lucia//+page.server.ts
+demo/src/routes/demo/lucia//+page.svelte
+demo/src/routes/demo/lucia//login
+demo/src/routes/demo/lucia//login/+page.server.ts
+demo/src/routes/demo/lucia//login/+page.svelte
+```
+
+Browse:
+
+* http://localhost:5173/demo/lucia/login
+
+
+
+## Demo Paraglide
+
+Setup created a demo route for Paraglide:
+
+* http://localhost:5173/demo/paraglide
+
+
 ## Create helper tools
 
 For some of our projects, we create helper tools, such as typical shell scripts.
@@ -403,6 +678,7 @@ Our naming convention is to put these tools here:
 ```sh
 mkdir bin
 ```
+
 
 ### markdown-reader-to-headline
 
@@ -427,7 +703,7 @@ File <bin/clean>:
 ```sh
 #!/bin/sh
 set -euf
-find ../src/routes -type f ! -name '+*' -exec rm {} \;
+find .src/routes -type f ! -name '+*' -exec rm {} \;
 ```
 
 This tool enables us to quickly clean up routes.
@@ -435,17 +711,17 @@ This tool enables us to quickly clean up routes.
 Example before:
 
 ```
-./src/routes/+layout.svelte
-./src/routes/+page.svelte
-./src/routes/alfa.bravo
-./src/routes/charlie.delta
+src/routes/+layout.svelte
+src/routes/+page.svelte
+src/routes/alfa.bravo
+src/routes/charlie.delta
 ```
 
 Example after:
 
 ```
-./src/routes/+layout.svelte
-./src/routes/+page.svelte
+src/routes/+layout.svelte
+src/routes/+page.svelte
 ```
 
 
@@ -466,15 +742,14 @@ sort | cut -c $(( ${#DIR} + 2 ))-
 
 Example input pre-existing directory structure:
 
-```
+```txt
 my-project/topics/alpha/index.md
 my-project/topics/bravo/index.md
-```
 ```
 
 Example output slugs:
 
-```
+```txt
 alpha
 bravo
 ```
