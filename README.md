@@ -255,7 +255,7 @@ git commit -m "Run npx sv@latest create demo --template minimal --types ts"
 ```
 
 
-### Database
+### Database connection
 
 This demo uses the PostgreSQL database server that must already be running on your system.
 
@@ -276,7 +276,7 @@ DATABASE_URL="postgres://user:password@host:port/db-name"
 Change the line to:
 
 ```sh
-DATABASE_URL="postgres://demo_sveltekit_pro_owner:secret@host:5432/demo_sveltekit_pro_development"
+DATABASE_URL="postgres://demo_sveltekit_pro_owner:secret@localhost:5432/demo_sveltekit_pro_development"
 ```
 
 
@@ -610,7 +610,29 @@ pnpm test
 
 ## Database
 
-Setup created s database schema file  [`src/lib/server/db/schema.ts`](src/lib/server/db/schema.ts):
+Previously in this demo, we created a database connection and included the credentials in our .env environment variables.
+
+Setup created a Drizzle configuration file [`drizzle.config.ts`](drizzle.config.ts):
+
+
+```ts
+import { defineConfig } from 'drizzle-kit';
+if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
+
+export default defineConfig({
+	schema: './src/lib/server/db/schema.ts',
+
+	dbCredentials: {
+		url: process.env.DATABASE_URL
+	},
+
+	verbose: true,
+	strict: true,
+	dialect: 'postgresql'
+});
+```
+
+Setup created a Drizzle database schema file  [`src/lib/server/db/schema.ts`](src/lib/server/db/schema.ts):
 
 ```txt
 import { pgTable, serial, text, integer, timestamp } from 'drizzle-orm/pg-core';
@@ -633,6 +655,87 @@ export const session = pgTable('session', {
 export type Session = typeof session.$inferSelect;
 
 export type User = typeof user.$inferSelect;
+```
+
+Generate the SQL needed to migrate the database:
+
+```sh
+npx drizzle-kit generate
+```
+
+Output:
+
+```
+2 tables
+session 3 columns 0 indexes 1 fks
+user 4 columns 0 indexes 0 fks
+
+[✓] Your SQL migration file ➜ drizzle/0000_pretty_rockslide.sql 🚀
+```
+
+The file [`drizzle/0000_pretty_rockslide.sql`](drizzle/0000_pretty_rockslide.sql):
+
+```sql
+CREATE TABLE IF NOT EXISTS "session" (
+        "id" text PRIMARY KEY NOT NULL,
+        "user_id" text NOT NULL,
+        "expires_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "user" (
+        "id" text PRIMARY KEY NOT NULL,
+        "age" integer,
+        "username" text NOT NULL,
+        "password_hash" text NOT NULL,
+        CONSTRAINT "user_username_unique" UNIQUE("username")
+);
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+➜ cat drizzle/0000_pretty_rockslide.sql
+CREATE TABLE IF NOT EXISTS "session" (
+	"id" text PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "user" (
+	"id" text PRIMARY KEY NOT NULL,
+	"age" integer,
+	"username" text NOT NULL,
+	"password_hash" text NOT NULL,
+	CONSTRAINT "user_username_unique" UNIQUE("username")
+);
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+```
+
+To run the migration:
+
+```sh
+npx drizzle-kit migrate	
+```
+
+Verfiy:
+
+```sh
+psql -d "postgres://demo_sveltekit_pro_owner:secret@localhost:5432/demo_sveltekit_pro_development" \
+-c "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema NOT IN ('pg_catalog', 'information_schema');"
+```
+
+```txt
+      table_name      
+----------------------
+ __drizzle_migrations
+ user
+ session
 ```
 
 
