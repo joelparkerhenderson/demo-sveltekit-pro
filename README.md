@@ -291,13 +291,14 @@ pnpm run dev -- --open
 
 ### Optional copy
 
-To copy old files from a previous demo project:
+To copy old files from a old demo project:
 
 ```sh
-cp demo-old/.env demo/
-cp demo-old/src/lib/{Header,Footer}.svelte demo/src/lib/
-cp demo-old/src/app.css demo/src/
-cp demo-old/src/routes/+layout.svelte demo/src/routes/
+cp old/.env demo/
+cp old/src/lib/{Header,Footer}.svelte demo/src/lib/
+cp old/src/app.css demo/src/
+cp old/src/routes/+layout.svelte demo/src/routes/
+cp old/src/lib/server/db/schema.ts demo/src/lib/server/db/
 ```
 
 
@@ -614,7 +615,6 @@ Previously in this demo, we created a database connection and included the crede
 
 Setup created a Drizzle configuration file [`drizzle.config.ts`](drizzle.config.ts):
 
-
 ```ts
 import { defineConfig } from 'drizzle-kit';
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
@@ -634,7 +634,7 @@ export default defineConfig({
 
 Setup created a Drizzle database schema file  [`src/lib/server/db/schema.ts`](src/lib/server/db/schema.ts):
 
-```txt
+```js
 import { pgTable, serial, text, integer, timestamp } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('user', {
@@ -659,13 +659,13 @@ export type User = typeof user.$inferSelect;
 
 We prefer the id to be an integer primary key generated always as identity.
 
-Change each of the lines from this…
+Change each of the lines from…
 
 ```ts
         id: text('id').primaryKey(),
 ```
 
-…into this:
+…into:
 
 ```ts
         id: integer('id').primaryKey().generatedAlwaysAsIdentity({ startWith: 1 }),
@@ -797,9 +797,34 @@ demo/src/routes/demo/lucia//login/+page.server.ts
 demo/src/routes/demo/lucia//login/+page.svelte
 ```
 
-Browse:
+Browse: http://localhost:5173/demo/lucia/login
 
-* http://localhost:5173/demo/lucia/login
+
+### Display error messages
+
+The Lucia login and registration code is in the file [`src/routes/demo/lucia/login/+page.server.ts`](src/routes/demo/lucia/login/+page.server.ts).
+
+We prefer Lucia to display error messages that originate from the database and ORM.
+
+Change this line from…
+
+```ts
+			return fail(500, { message: 'An error has occurred' });
+```
+
+…into:
+
+```ts
+			return fail(500, { message: 'An error has occurred: ' + (e instanceof Error ? e.message : 'unknown error') });
+```
+
+Browse: http://localhost:5173/demo/lucia/login
+
+Now if you try username "alice" and password "secret", you should see this error message: 
+
+* An error has occurred: cannot insert a non-DEFAULT value into column "id".
+
+The error is because we changed the primary key type. We'll fix this next.
 
 
 
