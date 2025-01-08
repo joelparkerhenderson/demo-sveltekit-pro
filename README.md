@@ -227,6 +227,7 @@ The options mean:
 │
 └  You're all set!
 ```
+</details>
 
 
 ### Deprecated SvelteKit
