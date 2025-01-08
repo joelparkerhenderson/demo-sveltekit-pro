@@ -295,11 +295,14 @@ pnpm run dev -- --open
 To copy old files from a old demo project:
 
 ```sh
-cp old/.env demo/
-cp old/src/lib/{Header,Footer}.svelte demo/src/lib/
-cp old/src/app.css demo/src/
-cp old/src/routes/+layout.svelte demo/src/routes/
-cp old/src/lib/server/db/schema.ts demo/src/lib/server/db/
+cp old/.env demo/.env
+cp old/src/app.css demo/src/app.css
+cp old/src/lib/Header.svelte demo/src/lib/Header.svelte
+cp old/src/lib/Footer.svelte demo/src/lib/Footer.svelte
+cp old/src/routes/+layout.svelte demo/src/routes/+layout.svelte
+cp old/src/lib/server/db/schema.ts demo/src/lib/server/db/schema.ts
+cp old/src/routes/demo/lucia//login/+page.server.ts demo/src/routes/demo/lucia//login/+page.server.ts
+cp old/src/lib/server/auth.ts demo//src/lib/server/auth.ts
 ```
 
 
