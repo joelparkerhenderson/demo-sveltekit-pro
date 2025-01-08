@@ -827,6 +827,67 @@ Now if you try username "alice" and password "secret", you should see this error
 The error is because we changed the primary key type. We'll fix this next.
 
 
+### Create a user via SQL
+
+To create a user via SQL, look at the Lucia login file [`src/routes/demo/lucia/login/+page.server.ts`](src/routes/demo/lucia/login/+page.server.ts).
+
+This line shows the password hash algorithm is argon2:
+
+```ts
+import { hash, verify } from '@node-rs/argon2';
+```
+
+This line converts plain text into a password hash:
+
+```ts
+		const passwordHash = await hash(password, {
+```
+
+
+This line validates the database record user's password hash with the web browser user's password form field plain text:
+
+```ts
+		const validPassword = await verify(existingUser.passwordHash, password, {
+```
+
+To generate a password using a command line node repl, we can use the same kind of code.
+
+Run:
+
+```sh
+node
+```
+
+Run:
+
+```js
+const { hash, verify } = await import("@node-rs/argon2");
+let plainText = "secret";
+console.log(plainText);
+const cryptText = await hash(plainText, {
+    memoryCost: 19456,
+    timeCost: 2,
+    outputLen: 32,
+    parallelism: 1
+});
+console.log(cryptText);
+let isValid = await verify(cryptText, plainText, {
+    memoryCost: 19456,
+    timeCost: 2,
+    outputLen: 32,
+    parallelism: 1
+});
+console.log(isValid);
+```
+
+Output:
+
+```
+secret
+$argon2id$v=19$m=19456,t=2,p=1$3fZkYOfXgvvRwEpZtT3tQQ$VqF4vlH5yDaFxabiFpZXXBfE2tJyuBujsci2EJrG7no
+true
+```
+
 
 ## Demo Paraglide
 
