@@ -107,7 +107,7 @@ brew install docker-compose docker-credential-helper
 Run the Svelte command line interface:
 
 ```sh
-npx sv@latest create demo --template minimal --types ts
+npx sv@latest create demo_sveltekit --template minimal --types ts
 ```
 
 The options mean:
@@ -197,7 +197,7 @@ The options mean:
 │
 ◇  Project next steps ─────────────────────────────────────────────────────╮
 │                                                                          │
-│  1: cd demo                                                              │
+│  1: cd demo_sveltekit                                                    │
 │  2: git init && git add -A && git commit -m "Initial commit" (optional)  │
 │  3: pnpm run dev --open                                                  │
 │                                                                          │
@@ -249,10 +249,10 @@ npm create @svelte-add/kit@latest my.example.com -- \
 Run:
 
 ```sh
-cd demo
+cd demo_sveltekit
 git init
 git add --all
-git commit -m "Run npx sv@latest create demo --template minimal --types ts"
+git commit -m "Run npx sv@latest create demo_sveltekit --template minimal --types ts"
 ```
 
 
@@ -263,21 +263,23 @@ This demo uses the PostgreSQL database server that must already be running on yo
 Create a new role and database:
 
 ```sh
-psql -U postgres -c "CREATE ROLE demo_sveltekit_pro_owner WITH LOGIN ENCRYPTED PASSWORD 'secret';"
-psql -U postgres -c "CREATE DATABASE demo_sveltekit_pro_development with owner = demo_sveltekit_pro_owner;"
+psql -U postgres -c "CREATE ROLE demo_sveltekit_owner WITH LOGIN ENCRYPTED PASSWORD 'secret';"
+psql -U postgres -c "CREATE DATABASE demo_sveltekit_development with owner = demo_sveltekit_owner;"
 ```
 
-Setup created a file Edit file [`.env`](.env):
+Setup created a file Edit file [`.env`](.env).
+
+Replace the line……
 
 ```sh
 # Replace with your DB credentials!
 DATABASE_URL="postgres://user:password@host:port/db-name"
 ```
 
-Change the line to:
+…with:
 
 ```sh
-DATABASE_URL="postgres://demo_sveltekit_pro_owner:secret@localhost:5432/demo_sveltekit_pro_development"
+DATABASE_URL="postgres://demo_sveltekit_owner:secret@localhost:5432/demo_sveltekit_development"
 ```
 
 
@@ -488,7 +490,7 @@ Add these components to the layout file [`src/routes/+layout.svelte`](src/routes
 <script lang="ts">
 	import { i18n } from '$lib/i18n';
 	import { ParaglideJS } from '@inlang/paraglide-sveltekit';
-	import '.app.css';
+	import '../app.css';
     import Header from "$lib/Header.svelte";
     import Footer from "$lib/Footer.svelte";
 	let { children } = $props();
@@ -612,372 +614,14 @@ Run:
 pnpm test
 ```
 
+## Drizzle ORM
 
-## Database
-
-Previously in this demo, we created a database connection and included the credentials in our .env environment variables.
-
-Setup created a Drizzle configuration file [`drizzle.config.ts`](drizzle.config.ts):
-
-```ts
-import { defineConfig } from 'drizzle-kit';
-if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
-
-export default defineConfig({
-	schema: './src/lib/server/db/schema.ts',
-
-	dbCredentials: {
-		url: process.env.DATABASE_URL
-	},
-
-	verbose: true,
-	strict: true,
-	dialect: 'postgresql'
-});
-```
-
-
-### Schema
-
-Setup created a Drizzle database schema file  [`src/lib/server/db/schema.ts`](src/lib/server/db/schema.ts):
-
-```js
-import { pgTable, serial, text, integer, timestamp } from 'drizzle-orm/pg-core';
-
-export const user = pgTable('user', {
-        id: text('id').primaryKey(),
-        age: integer('age'),
-        username: text('username').notNull().unique(),
-        passwordHash: text('password_hash').notNull()
-});
-
-export const session = pgTable('session', {
-        id: text('id').primaryKey(),
-        userId: text('user_id')
-                .notNull()
-                .references(() => user.id),
-        expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull()
-});
-
-export type Session = typeof session.$inferSelect;
-
-export type User = typeof user.$inferSelect;
-```
-
-### Change id
-
-We prefer the user id to be an integer primary key generated always as identity.
-
-The session id stays as a text primary key because it will be sent to the browser as a cookie.
-
-Change the user section line from…
-
-```ts
-id: text('id').primaryKey(),
-```
-
-…into:
-
-```ts
-id: integer('id').primaryKey().generatedAlwaysAsIdentity({ startWith: 1 }),
-```
-
-Change the session section line from this…
-
-```ts
-userId: text('user_id')
-```
-
-…into this:
-
-```ts
-userId: integer('user_id')
-```
-
-
-### drizzle-kit generate
-
-Generate the SQL needed to migrate the database:
-
-```sh
-npx drizzle-kit generate
-```
-
-Output:
-
-```
-2 tables
-session 3 columns 0 indexes 1 fks
-user 4 columns 0 indexes 0 fks
-
-[✓] Your SQL migration file ➜ drizzle/0000_pretty_rockslide.sql 🚀
-```
-
-
-### Change id again
-
-The file [`drizzle/0000_pretty_rockslide.sql`](drizzle/0000_pretty_rockslide.sql):
-
-```sql
-CREATE TABLE IF NOT EXISTS "session" (
-        "id" integer PRIMARY KEY NOT NULL,
-        "user_id" integer NOT NULL,
-        "expires_at" timestamp with time zone NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "user" (
-        "id" integer PRIMARY KEY NOT NULL,
-        "age" integer,
-        "username" text NOT NULL,
-        "password_hash" text NOT NULL,
-        CONSTRAINT "user_username_unique" UNIQUE("username")
-);
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
-```
-
-Change the user section line from this…
-
-```sql
-"id" integer PRIMARY KEY NOT NULL,
-```
-
-…into this:
-
-```sql
-"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-```
-
-
-### drizzle-kit migrate
-
-Run the migration:
-
-```sh
-npx drizzle-kit migrate	
-```
-
-Verify tables:
-
-```sh
-psql -d "postgres://demo_sveltekit_pro_owner:secret@localhost:5432/demo_sveltekit_pro_development" \
--c "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema NOT IN ('pg_catalog', 'information_schema');"
-```
-
-```txt
-      table_name      
-----------------------
- __drizzle_migrations
- user
- session
-```
-
-Verify tables and columns:
-
-```sh
-➜ psql -d "postgres://demo_sveltekit_pro_owner:secret@localhost:5432/demo_sveltekit_pro_development" 
--c "SELECT table_name, column_name, data_type FROM information_schema.columns where table_schema = 'public' order by table_name;"
-```
-
-```txt
- table_name |  column_name  |        data_type         
-------------+---------------+--------------------------
- session    | id            | integer
- session    | user_id       | integer
- session    | expires_at    | timestamp with time zone
- user       | id            | integer
- user       | age           | integer
- user       | username      | text
- user       | password_hash | text
-```
-
+[README-DRIZZLE.md](README-DRIZZLE.md)
 
 
 ## Lucia authentication
 
-Setup created a demo route for Lucia:
-
-* http://localhost:5173/demo/lucia
-
-Setup created a Lucia demo directory: [`src/routes/demo/lucia/`](src/routes/demo/lucia/)
-
-```txt
-demo/src/routes/demo/lucia/
-demo/src/routes/demo/lucia//+page.server.ts
-demo/src/routes/demo/lucia//+page.svelte
-demo/src/routes/demo/lucia//login
-demo/src/routes/demo/lucia//login/+page.server.ts
-demo/src/routes/demo/lucia//login/+page.svelte
-```
-
-Browse: http://localhost:5173/demo/lucia/login
-
-
-### Display error messages
-
-The Lucia login and registration code is in the file [`src/routes/demo/lucia/login/+page.server.ts`](src/routes/demo/lucia/login/+page.server.ts).
-
-We prefer Lucia to display error messages that originate from the database and ORM.
-
-Change this line from…
-
-```ts
-return fail(500, { message: 'An error has occurred' });
-```
-
-…into:
-
-```ts
-return fail(500, { message: 'An error has occurred: ' + (e instanceof Error ? e.message : 'unknown error') });
-```
-
-Browse: http://localhost:5173/demo/lucia/login
-
-Now if you try username "alice" and password "secret", you should see this error message: 
-
-* An error has occurred: cannot insert a non-DEFAULT value into column "id".
-
-The error is because we changed the primary key type. We'll fix this next.
-
-
-### Register with identity
-
-We need to fix the Lucia "register" functionality because we changed the user id from text (which was generated by Lucia) to integer generated always as identity (which is generated by the database). 
-
-To do this, we edit the `db.insert` call, to remove the user id, and also to return the user new record so we learn the user id.
-
-Change this line from…
-
-```ts
-await db.insert(table.user).values({ id: userId, username, passwordHash });
-```
-
-…into:
-
-```
-const results = await db.insert(table.user).values({ username, passwordHash }).returning();
-const user = results.at(0);
-if (user == undefined) throw new Error('user is undefined');
-```
-
-
-### Fix createSession
-
-Edit the file [`src/lib/server/auth.ts`](src/lib/server/auth.ts).
-
-Change this line from…
-
-```ts
-export async function createSession(token: string, userId: string) {
-```
-
-…into:
-
-```ts
-export async function createSession(token: string, userId: number) {
-```
-
-Remove the line with the sessionId from…
-
-```ts
-const session: table.Session = {
-    id: sessionId,
-    userId,
-```
-
-…into:
-
-```ts
-const session: table.Session = {
-    userId,
-};
-```
-
-### Create a user via SQL
-
-To create a user via SQL, look at the Lucia login file [`src/routes/demo/lucia/login/+page.server.ts`](src/routes/demo/lucia/login/+page.server.ts).
-
-This line shows the password hash algorithm is argon2:
-
-```ts
-import { hash, verify } from '@node-rs/argon2';
-```
-
-This line converts plain text into a password hash:
-
-```ts
-const passwordHash = await hash(password, {
-```
-
-This line validates the database record user's password hash with the web browser user's password form field plain text:
-
-```ts
-const validPassword = await verify(existingUser.passwordHash, password, {
-```
-
-To generate a password using a command line node repl, we can use the same kind of code.
-
-Run:
-
-```sh
-node
-```
-
-Run:
-
-```js
-const { hash, verify } = await import("@node-rs/argon2");
-let plainText = "secret";
-console.log(plainText);
-let cryptText = await hash(plainText, {
-    memoryCost: 19456,
-    timeCost: 2,
-    outputLen: 32,
-    parallelism: 1
-});
-console.log(cryptText);
-let isValid = await verify(cryptText, plainText, {
-    memoryCost: 19456,
-    timeCost: 2,
-    outputLen: 32,
-    parallelism: 1
-});
-console.log(isValid);
-```
-
-Output:
-
-```
-secret
-$argon2id$v=19$m=19456,t=2,p=1$gnPDENU4HSDqjiSXNmwjtQ$rb2rZCEcM+OGerU1Mk02+P0bXY+XMPgy9jJ0dakEqdo
-true
-```
-
-Run SQL:
-
-```sql
-INSERT INTO "user" (
-    username, 
-    password_hash
-) 
-VALUES (
-    'guest', 
-    '$argon2id$v=19$m=19456,t=2,p=1$gnPDENU4HSDqjiSXNmwjtQ$rb2rZCEcM+OGerU1Mk02+P0bXY+XMPgy9jJ0dakEqdo'
-); 
-```
-
-Vet SQL:
-
-```sql
-SELECT * FROM "user";
- id | age | username |                                        password_hash                                         
-----+-----+----------+----------------------------------------------------------------------------------------------
-  1 |     | guest    | $argon2id$v=19$m=19456,t=2,p=1$gnPDENU4HSDqjiSXNmwjtQ$rb2rZCEcM+OGerU1Mk02+P0bXY+XMPgy9jJ0dakEqdo
-```
+[README-LUCIA.md](README-LUCIA.md)
 
 
 ## Demo Paraglide
