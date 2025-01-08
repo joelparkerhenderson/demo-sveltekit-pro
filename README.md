@@ -663,25 +663,25 @@ We prefer the id to be an integer primary key generated always as identity.
 Change each of the lines from…
 
 ```ts
-        id: text('id').primaryKey(),
+id: text('id').primaryKey(),
 ```
 
 …into:
 
 ```ts
-        id: integer('id').primaryKey().generatedAlwaysAsIdentity({ startWith: 1 }),
+id: integer('id').primaryKey().generatedAlwaysAsIdentity({ startWith: 1 }),
 ```
 
 Change from this…
 
 ```ts
-	userId: text('user_id')
+userId: text('user_id')
 ```
 
 …into this:
 
 ```ts
-	userId: integer('user_id')
+userId: integer('user_id')
 ```
 
 
@@ -728,13 +728,13 @@ END $$;
 Change each of the lines from this…
 
 ```sql
-        "id" integer PRIMARY KEY NOT NULL,
+"id" integer PRIMARY KEY NOT NULL,
 ```
 
 …into this:
 
 ```sql
-        "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 ```
 
 Run the migration:
@@ -841,14 +841,14 @@ import { hash, verify } from '@node-rs/argon2';
 This line converts plain text into a password hash:
 
 ```ts
-		const passwordHash = await hash(password, {
+const passwordHash = await hash(password, {
 ```
 
 
 This line validates the database record user's password hash with the web browser user's password form field plain text:
 
 ```ts
-		const validPassword = await verify(existingUser.passwordHash, password, {
+const validPassword = await verify(existingUser.passwordHash, password, {
 ```
 
 To generate a password using a command line node repl, we can use the same kind of code.
@@ -865,7 +865,7 @@ Run:
 const { hash, verify } = await import("@node-rs/argon2");
 let plainText = "secret";
 console.log(plainText);
-const cryptText = await hash(plainText, {
+let cryptText = await hash(plainText, {
     memoryCost: 19456,
     timeCost: 2,
     outputLen: 32,
