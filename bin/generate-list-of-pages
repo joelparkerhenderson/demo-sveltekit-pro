@@ -1,0 +1,20 @@
+#!/bin/sh
+set -euf
+top="$(git rev-parse --show-toplevel)"
+
+from_route_into_h1() {
+    grep -m 1 '<h1>' "$1/+page.svelte" | sed 's#<h1>\(.*\)</h1>#\1#'
+}
+
+from_route_into_href() {
+    printf %s "$1" | sed 's#.*/src/routes##'
+}
+
+from_route_into_link() {
+    printf "<a href=\"%s\">%s</a>" "$(from_route_into_href "$1")"  "$(from_route_into_h1 "$1")"
+}
+
+find "$top/src/routes" -type f  -name "+page.svelte" -exec dirname {} \; | 
+while read -r route; do
+    printf "  * %s\n" "$(from_route_into_link "$route")"
+done

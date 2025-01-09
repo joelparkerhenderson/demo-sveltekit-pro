@@ -1,0 +1,35 @@
+#!/bin/sh
+set -euf
+top="$(git rev-parse --show-toplevel)"
+
+for title in \
+    "About Us" \
+    "Contact Us" \
+    "Careers" \
+    "Advisors" \
+    "Features" \
+    "Benefits" \
+    "Frequently Asked Questions" \
+    "Help" \
+    "Invite" \
+    "Press" \
+    "Pricing" \
+    "Privacy Policy" \
+    "Security" \
+    "Sign Up" \
+    "Sign In" \
+    "Sign Out" \
+    "Team" \
+    "Terms of Service" \
+    "News" \
+    "Blog" \
+    "Testimonials" \
+    "Case Studies" \
+    "White Papers"
+do
+    slug=$(echo "$title" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+    dir="$top/src/$slug"
+    file="$dir/+page.svelte"
+    mkdir -p "$dir"
+    test -e "$file" || printf "<h1>%s</h1>\n\n<p>Coming soon.</p>" "$title" > "$file"
+done
