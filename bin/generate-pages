@@ -1,0 +1,72 @@
+#!/bin/sh
+set -euf
+top="$(git rev-parse --show-toplevel)"
+
+from_route_into_href() {
+    printf %s "$1" | sed 's#.*/src/routes##'
+}
+
+write_page() {
+    slug="$1"
+    h1="$2"
+    mkdir -p "$top/src/routes/$slug"
+    file="$top/src/routes/$slug/+page.svelte"
+    if [ ! -e "$file" ]; then 
+        {
+            printf "<h1>%s</h1>\n" "$h1"
+            printf "\n"
+            printf "<p>Coming soon.</p>\n"
+        } > "$file"
+    fi
+}
+
+write_e2e() {
+    slug="$1"
+    h1="$2"
+    file="$top/e2e/$slug.test.ts"
+    if [ -e "$file" ]; then 
+        {
+            printf "import { expect, test } from '@playwright/test';\n"
+            printf "\n"
+            printf "test('page has h1', async ({ page }) => {\n"
+            printf "        await page.goto('/%s');\n" "$slug"
+            printf "        await expect(page.locator('h1')).toBeVisible();\n"
+            printf "        await expect(page.locator('h1')).toHaveText(\"%s\")\n" "$h1"
+            printf "});\n"
+        } > "$file"
+    fi
+}    
+
+for title in \
+    "About Us" \
+    "Contact Us" \
+    "Careers" \
+    "Support" \
+    "Pricing" \
+    "Products" \
+    "Services" \
+    "Features" \
+    "Benefits" \
+    "Advisors" \
+    "Examples" \
+    "Help" \
+    "Invite" \
+    "Sign Up" \
+    "Sign In" \
+    "Sign Out" \
+    "Frequently Asked Questions" \
+    "Testimonials" \
+    "Case Studies" \
+    "White Papers" \
+    "News" \
+    "Blog" \
+    "Press" \
+    "Terms of Service" \
+    "Privacy Policy" \
+    "Coordinated Disclosure" \
+    "Security"
+do
+    slug=$(echo "$title" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+    write_page "$slug" "$title"
+    write_e2e "$slug" "$title"
+done
