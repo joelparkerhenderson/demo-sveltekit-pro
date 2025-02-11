@@ -92,6 +92,17 @@ const user = results.at(0);
 if (user == undefined) throw new Error('user is undefined');
 ```
 
+From:
+
+```ts
+const session = await auth.createSession(sessionToken, userId);
+```
+
+Into:
+
+```ts
+const session = await auth.createSession(sessionToken, user.id);
+```
 
 ### Fix createSession
 
