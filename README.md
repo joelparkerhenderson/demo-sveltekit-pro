@@ -166,7 +166,7 @@ The options mean:
 │  ● Yes / ○ No
 │
 ◇  paraglide: Which languages would you like to support? (e.g. en,de-ch)
-│  ar,cy,de,en,es,eu,fr,hi,ja,sv,ru,zh
+│  en,ar,cy,de,es,eu,fr,hi,ja,sv,ru,zh
 │
 ◇  paraglide: Do you want to include a demo?
 │  ● Yes / ○ No
@@ -294,17 +294,19 @@ pnpm run dev -- --open
 
 ### Optional copy
 
-To copy old files from a old demo project:
+To copy relevant files from a old demo into a new demo:
 
 ```sh
-cp old/.env demo/.env
-cp old/src/app.css demo/src/app.css
-cp old/src/lib/Header.svelte demo/src/lib/Header.svelte
-cp old/src/lib/Footer.svelte demo/src/lib/Footer.svelte
-cp old/src/routes/+layout.svelte demo/src/routes/+layout.svelte
-cp old/src/lib/server/db/schema.ts demo/src/lib/server/db/schema.ts
-cp old/src/routes/demo/lucia//login/+page.server.ts demo/src/routes/demo/lucia//login/+page.server.ts
-cp old/src/lib/server/auth.ts demo//src/lib/server/auth.ts
+a=demo_sveltekit_old
+b=demo_sveltekit_new
+cp $a/.env $b/.env
+cp $a/src/app.css $b/src/app.css
+cp $a/src/lib/Header.svelte $b/src/lib/Header.svelte
+cp $a/src/lib/Footer.svelte $b/src/lib/Footer.svelte
+cp $a/src/routes/+layout.svelte $b/src/routes/+layout.svelte
+cp $a/src/lib/server/db/schema.ts $b/src/lib/server/db/schema.ts
+cp $a/src/routes/demo/lucia/login/+page.server.ts $b/src/routes/demo/lucia/login/+page.server.ts
+cp $a/src/lib/server/auth.ts $b/src/lib/server/auth.ts
 ```
 
 
@@ -455,6 +457,36 @@ Setup create a layout file [`src/routes/+layout.svelte`](src/routes/+layout.svel
 <ParaglideJS {i18n}>
 	{@render children()}
 </ParaglideJS>
+```
+
+
+### DaisyUI (optional)
+
+DaisyUI is a component library for Tailwind CSS. It provides a set of pre-designed components that you can use in your SvelteKit project.
+
+Install DaisyUI:
+
+```sh
+pnpm i daisyui
+```
+
+Edit file [`tailwind.config.ts`](tailwind.config.ts).
+
+Add DaisyUI import:
+
+```ts
+import daisyui from 'daisyui';
+```
+
+Add DaisyUI to the plugins array:
+
+```ts
+plugins: [
+    typography, 
+    forms, 
+    containerQueries,
+    daisyui
+]
 ```
 
 
@@ -614,104 +646,125 @@ Run:
 pnpm test
 ```
 
+
 ## Drizzle ORM
 
-[README-DRIZZLE.md](README-DRIZZLE.md)
+[README-drizzle.md](README-DRIZZLE.md)
 
 
 ## Lucia authentication
 
-[README-LUCIA.md](README-LUCIA.md)
+[README-lucia.md](README-LUCIA.md)
 
 
-## Demo Paraglide
+## Paraglide internationalization
 
-Setup created a demo route for Paraglide:
-
-* http://localhost:5173/demo/paraglide
+[README-paraglide.md](README-LUCIA.md)
 
 
-## Create helper tools
+## Tools
 
-For some of our projects, we create helper tools, such as typical shell scripts.
-
-Our naming convention is to put these tools here:
-
-```sh
-mkdir bin
-```
+[README-tools.md](README-TOOLS.md)
 
 
-### markdown-reader-to-headline
+## AWS Amplify
 
-File <bin/markdown-reader-to-headline>:
+https://docs.aws.amazon.com/amplify/latest/userguide/get-started-sveltekit.html
+Run:
 
 ```sh
-grep -m1 '^##*[[:space:]][[:space:]]*[^[:space:]]' "$@" |
-sed 's/^#*[[:space:]]*//; s/[[:space:]]*#*[[:space:]]*$//;'
+pnpm install amplify-adapter
 ```
 
 
-### clean
+## DaisyUI components (optional)
 
-For some of our projects, we create a helper tool that we name `clean`.
+This section shows how to create a DaisyUI Svelte component to display a DaisyUI stat. This section is intended to be a simple typical example of how to use the DaisyUI stat layout with Svelte props.
 
-The tool aims to reset the project to its original state.
+Create a folder `src/lib/daisyui`. This is a convenient place to create DaisyUI components.
 
-For example, the code below deletes all normal routes, yet does not affect any special routes that start with a plus character.
+Create a file `src/lib/daisyui/Stat.svelte`:
 
-File <bin/clean>:
+```svelte
+<script>
+	let { stat } = $props();
+</script>
 
-```sh
-#!/bin/sh
-set -euf
-find .src/routes -type f ! -name '+*' -exec rm {} \;
+<div class="stat">
+    {#if stat.title != null}<div class="stat-title">{stat.title}</div>{/if}
+    {#if stat.value != null}<div class="stat-value">{stat.value}</div>{/if}
+    {#if stat.desc != null}<div class="stat-desc">{stat.desc}</div>{/if}
+</div>
 ```
 
-This tool enables us to quickly clean up routes.
+Edit the home page file `src/routes/+page.svelte` and add the new component:
 
-Example before:
+```svelte
+<script lang="ts">
+	import Stat from '$lib/daisyui/Stat.svelte';
+    let stat = { title: 'Alfa', value: 'Bravo'};
+</script>
 
-```
-src/routes/+layout.svelte
-src/routes/+page.svelte
-src/routes/alfa.bravo
-src/routes/charlie.delta
-```
+<h1>Welcome to SvelteKit</h1>
 
-Example after:
-
-```
-src/routes/+layout.svelte
-src/routes/+page.svelte
+<Stat {stat} />
 ```
 
 
-### slugs
+### Looping
 
-For some of our projects, we create a helper tool that we name `slugs`.
+Suppose you want to loop over a list of items.
 
-For example, the code below searches a pre-existing git repository, that contains a directory named `topics`, that contains pre-existing subdirectories, that each contain a markdown content file named `index.md`. The tool parses the directories into web-friendly slugs.
+Edit the home page file `src/routes/+page.svelte` and add the items and a loop:
 
-File <bin/slugs>:
+```svelte
+<script lang="ts">
+	import Stat from '$lib/daisyui/Stat.svelte';
+	let stats = [
+		{ title: 'Charlie', value: 'Delta'},
+		{ title: 'Echo', value: 'Foxtrot'}
+	];
+</script>
 
-```sh
-GIT_TOP_DIR="$(git rev-parse --show-toplevel)"
-DIR="$GIT_TOP_DIR/topics"
-find "$DIR" -name 'index.md' -type f -exec dirname {} \; |
-sort | cut -c $(( ${#DIR} + 2 ))-
+<h1>Welcome to SvelteKit</h1>
+
+<div class="stats">
+	{#each stats as stat}
+		<Stat {stat} />
+	{/each}
+</div>
 ```
 
-Example input pre-existing directory structure:
 
-```txt
-my-project/topics/alpha/index.md
-my-project/topics/bravo/index.md
+### Collections
+
+Suppose you want to refactor the looping to its own component `src/lib/daisyui/Stats.svelte`:
+
+```svelte
+<script lang="ts">
+	import Stat from '$lib/daisyui/Stat.svelte';
+    let { stats } = $props();
+</script>
+
+<div class="stats">
+{#each stats as stat}
+    <Stat {stat} />
+{/each}
+</div>
 ```
 
-Example output slugs:
+Edit the home page file `src/routes/+page.svelte` and add the items and a loop:
 
-```txt
-alpha
-bravo
+```svelte
+<script lang="ts">
+	import Stats from '$lib/daisyui/Stats.svelte';
+	let stats = [
+		{ title: 'Charlie', value: 'Delta'},
+		{ title: 'Echo', value: 'Foxtrot'}
+	];
+</script>
+
+<h1>Welcome to SvelteKit</h1>
+
+<Stats {stats} />
 ```
